@@ -21,5 +21,7 @@ func main() {
 		handleAdd(svc)
 	case "update":
 		handleUpdate(svc)
+	case "delete":
+		handleDelete(svc)
 	}
 }

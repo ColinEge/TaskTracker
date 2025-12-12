@@ -9,5 +9,6 @@ func Help() {
 	fmt.Println(`
 Commands:
   add <description>          Add a new task
-  update <id> <description>  Update a task`)
+  update <id> <description>  Update a task
+  delete <id>                Delete a task`)
 }
