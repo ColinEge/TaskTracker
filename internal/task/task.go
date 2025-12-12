@@ -97,7 +97,6 @@ func (s TaskService) Update(id int64, t Task) error {
 		}
 		found = true
 		task.Description = t.Description
-		task.Status = t.Status
 		task.UpdatedAt = s.now()
 		tasks[i] = task
 	}
