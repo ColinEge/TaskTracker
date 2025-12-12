@@ -16,6 +16,18 @@ type Tasker interface {
 
 type Status int
 
+func (s Status) String() string {
+	switch s {
+	case StatusInProgress:
+		return "in-progress"
+	case StatusTodo:
+		return "todo"
+	case StatusDone:
+		return "done"
+	}
+	return ""
+}
+
 const (
 	StatusTodo Status = iota
 	StatusInProgress

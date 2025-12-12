@@ -27,5 +27,7 @@ func main() {
 		handleMark(svc, task.StatusInProgress)
 	case "mark-done":
 		handleMark(svc, task.StatusDone)
+	case "list":
+		handleList(svc)
 	}
 }

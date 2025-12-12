@@ -30,18 +30,9 @@ func handleMark(svc task.Tasker, status task.Status) {
 	}
 
 	err = svc.Mark(int64(id), status)
-	statusToString := func() string {
-		switch status {
-		case task.StatusInProgress:
-			return "in-progress"
-		case task.StatusDone:
-			return "done"
-		}
-		return ""
-	}
 	if err != nil {
-		fmt.Println(fmt.Errorf("failed to mark task as %s: %w", statusToString(), err))
+		fmt.Println(fmt.Errorf("failed to mark task as %s: %w", status.String(), err))
 		return
 	}
-	fmt.Printf("Task marked as %s successfully (ID: %d)\n", statusToString(), id)
+	fmt.Printf("Task marked as %s successfully (ID: %d)\n", status.String(), id)
 }
