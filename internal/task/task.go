@@ -114,7 +114,7 @@ func (s TaskService) Update(id int64, t Task) error {
 		tasks[i] = task
 	}
 	if !found {
-		return fmt.Errorf("%w: with id %d", ErrNotFound, id)
+		return fmt.Errorf("%w with id %d", ErrNotFound, id)
 	}
 	return save(s.savePath, tasks)
 }
@@ -136,7 +136,7 @@ func (s TaskService) Delete(id int64) error {
 		break
 	}
 	if !found {
-		return fmt.Errorf("%w: with id %d", ErrNotFound, id)
+		return fmt.Errorf("%w with id %d", ErrNotFound, id)
 	}
 	return save(s.savePath, tasks)
 }
@@ -158,7 +158,7 @@ func (s TaskService) Mark(id int64, status Status) error {
 		break
 	}
 	if !found {
-		return fmt.Errorf("%w: with id %d", ErrNotFound, id)
+		return fmt.Errorf("%w with id %d", ErrNotFound, id)
 	}
 	return save(s.savePath, tasks)
 }
