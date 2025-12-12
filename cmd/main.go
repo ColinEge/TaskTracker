@@ -2,8 +2,10 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/ColinEge/task-cli/internal/cli"
+	"github.com/ColinEge/task-cli/internal/task"
 )
 
 func main() {
@@ -12,8 +14,12 @@ func main() {
 		return
 	}
 
+	svc := task.NewTaskService(task.WithSavePath("tasks.json"), task.WithTimeFunction(time.Now))
+
 	switch os.Args[1] {
 	case "add":
-		handleAdd()
+		handleAdd(svc)
+	case "update":
+		handleUpdate(svc)
 	}
 }
