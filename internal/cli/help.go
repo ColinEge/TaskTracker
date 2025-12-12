@@ -10,5 +10,7 @@ func Help() {
 Commands:
   add <description>          Add a new task
   update <id> <description>  Update a task
-  delete <id>                Delete a task`)
+  delete <id>                Delete a task
+  mark-in-progress <id>      Mark a task as in progress
+  mark-done <id>             Mark a task as done`)
 }

@@ -23,5 +23,9 @@ func main() {
 		handleUpdate(svc)
 	case "delete":
 		handleDelete(svc)
+	case "mark-in-progress":
+		handleMark(svc, task.StatusInProgress)
+	case "mark-done":
+		handleMark(svc, task.StatusDone)
 	}
 }
