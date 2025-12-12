@@ -10,6 +10,7 @@ type Tasker interface {
 	Add(Task) (int64, error)
 	Update(id int64, t Task) error
 	Delete(id int64) error
+	Mark(id int64, status Status) error
 }
 
 type Status int
@@ -120,6 +121,28 @@ func (s TaskService) Delete(id int64) error {
 		found = true
 		t2 := append(tasks[:i], tasks[i+1:]...)
 		tasks = t2
+		break
+	}
+	if !found {
+		return fmt.Errorf("%w: with id %d", ErrNotFound, id)
+	}
+	return save(s.savePath, tasks)
+}
+
+func (s TaskService) Mark(id int64, status Status) error {
+	tasks, err := loadOrCreate(s.savePath)
+	if err != nil {
+		return err
+	}
+	// Find and update the task status
+	found := false
+	for i, task := range tasks {
+		if task.Id != id {
+			continue
+		}
+		found = true
+		task.Status = status
+		tasks[i] = task
 		break
 	}
 	if !found {
