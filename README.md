@@ -12,8 +12,14 @@ git clone https://github.com/ColinEge/TaskTracker.git
 # Navigate to the project directory
 cd TaskTracker
 
-# Build the application
-go build -o task-cli
+# Build the application for mac/linux
+go build -o .\.build\task-cli .\cmd\
+
+# OR Build the application for windows
+go build -o .\.build\task-cli.exe .\cmd\
+
+# Navigate to the build directory
+cd .\.build
 
 # Run the application
 ./task-cli
