@@ -300,3 +300,89 @@ func TestMark(t *testing.T) {
 		})
 	}
 }
+
+func TestList(t *testing.T) {
+	// use same time for all tests to account for file creation and reading time
+	testTime := time.Now()
+	timeBytes, err := testTime.MarshalJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	todoPtr := StatusTodo
+	tests := []struct {
+		name                   string
+		preExistingFileContent string
+		filter                 *Status
+		expectedTasks          []Task
+		expectedError          error
+		falsy                  bool
+		preventCleanup         bool
+	}{
+		{
+			name:          "tasksEmptyWithNoFile",
+			expectedTasks: []Task{},
+		},
+		{
+			name:                   "tasksListUnfiltered",
+			preExistingFileContent: `[{"id":1,"description":"Test The list function","status":1,"createdAt":` + string(timeBytes) + `}]`,
+			filter:                 nil,
+			expectedTasks:          []Task{{Id: 1, Description: "Test The list function", Status: 1, CreatedAt: testTime}},
+		},
+		{
+			name: "tasksListFilteredToDo",
+			preExistingFileContent: `[{"id":1,"description":"Test The list function filter hides this","status":1,"createdAt":` + string(timeBytes) + `},
+{"id":2,"description":"Test The list function filter and hides this","status":2,"createdAt":` + string(timeBytes) + `},
+{"id":3,"description":"Test The list function filter and hides this too","status":2,"createdAt":` + string(timeBytes) + `},
+{"id":4,"description":"Test The list function filter shows this","status":0,"createdAt":` + string(timeBytes) + `},
+{"id":5,"description":"Test The list function filter and shows this","status":0,"createdAt":` + string(timeBytes) + `}]`,
+			filter: &todoPtr,
+			expectedTasks: []Task{
+				{Id: 4, Description: "Test The list function filter shows this", Status: 0, CreatedAt: testTime},
+				{Id: 5, Description: "Test The list function filter and shows this", Status: 0, CreatedAt: testTime},
+			},
+		},
+	}
+
+	for _, tst := range tests {
+		t.Run(tst.name, func(t *testing.T) {
+			fileName := "test-" + tst.name + ".json"
+
+			// Cleanup files when done
+			t.Cleanup(func() {
+				if err := deleteFile(fileName); err != nil {
+					log.Default().Print(err)
+				}
+			})
+
+			// Create needed pre-test files
+			if tst.preExistingFileContent != "" {
+				if err := os.WriteFile(fileName, []byte(tst.preExistingFileContent), 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			// Add a task
+			svc := NewTaskService(WithSavePath(fileName), WithTimeFunction(func() time.Time { return testTime }))
+			tasks, err := svc.List(tst.filter)
+			if err != nil {
+				if errors.Is(err, tst.expectedError) {
+					return
+				}
+				t.Error(err)
+			}
+
+			// Check if the response state is as expected
+			if len(tst.expectedTasks) != len(tasks) {
+				t.Errorf("%s expected %v but got %v", tst.name, tst.expectedTasks, tasks)
+				return
+			}
+			for i, task := range tasks {
+				if isTaskSame(task, tst.expectedTasks[i]) {
+					continue
+				}
+				t.Errorf("%s expected task at index %d to be %v but got %v", tst.name, i, tst.expectedTasks[i], task)
+			}
+		})
+	}
+}

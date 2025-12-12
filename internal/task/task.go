@@ -11,6 +11,7 @@ type Tasker interface {
 	Update(id int64, t Task) error
 	Delete(id int64) error
 	Mark(id int64, status Status) error
+	List(status *Status) ([]Task, error)
 }
 
 type Status int
@@ -148,6 +149,27 @@ func (s TaskService) Mark(id int64, status Status) error {
 		return fmt.Errorf("%w: with id %d", ErrNotFound, id)
 	}
 	return save(s.savePath, tasks)
+}
+
+func (s TaskService) List(status *Status) ([]Task, error) {
+	tasks, err := loadOrCreate(s.savePath)
+	if err != nil {
+		return nil, err
+	}
+	// Return blank or unfiltered list
+	if len(tasks) == 0 || status == nil {
+		return tasks, nil
+	}
+
+	// filter list by status
+	var filteredList []Task
+	for _, task := range tasks {
+		if task.Status != *status {
+			continue
+		}
+		filteredList = append(filteredList, task)
+	}
+	return filteredList, nil
 }
 
 func loadOrCreate(path string) ([]Task, error) {
