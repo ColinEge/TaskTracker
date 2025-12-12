@@ -2,11 +2,13 @@ package task
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
 type Tasker interface {
 	Add(Task) (int64, error)
+	Update(id int64, t Task) error
 }
 
 type Status int
@@ -15,6 +17,10 @@ const (
 	StatusTodo Status = iota
 	StatusInProgress
 	StatusDone
+)
+
+var (
+	ErrNotFound = errors.New("task not found")
 )
 
 type Task struct {
@@ -54,13 +60,9 @@ func NewTaskService(opts ...TaskServiceOption) Tasker {
 }
 
 func (s TaskService) Add(t Task) (int64, error) {
-	// Give task an ID
-	tasks, err := load(s.savePath)
+	tasks, err := loadOrCreate(s.savePath)
 	if err != nil {
-		if !errors.Is(err, ErrNotExist) {
-			return 0, err
-		}
-		tasks = []Task{}
+		return 0, err
 	}
 
 	// Fill in the tasks blanks
@@ -77,4 +79,39 @@ func (s TaskService) Add(t Task) (int64, error) {
 	err = save(s.savePath, tasks)
 
 	return t.Id, err
+}
+
+func (s TaskService) Update(id int64, t Task) error {
+	tasks, err := loadOrCreate(s.savePath)
+	if err != nil {
+		return err
+	}
+
+	// Find the task to update
+	found := false
+	for i, task := range tasks {
+		if task.Id != id {
+			continue
+		}
+		found = true
+		task.Description = t.Description
+		task.Status = t.Status
+		task.UpdatedAt = s.now()
+		tasks[i] = task
+	}
+	if !found {
+		return fmt.Errorf("%w: with id %d", ErrNotFound, id)
+	}
+	return save(s.savePath, tasks)
+}
+
+func loadOrCreate(path string) ([]Task, error) {
+	tasks, err := load(path)
+	if err != nil {
+		if !errors.Is(err, ErrFileNotExist) {
+			return nil, err
+		}
+		tasks = []Task{}
+	}
+	return tasks, nil
 }

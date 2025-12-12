@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var ErrNotExist = os.ErrNotExist
+var ErrFileNotExist = os.ErrNotExist
 
 func save(savePath string, tasks []Task) error {
 	js, err := json.Marshal(tasks)
