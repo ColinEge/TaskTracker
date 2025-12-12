@@ -1,0 +1,81 @@
+package task
+
+import (
+	"log"
+	"os"
+	"testing"
+	"time"
+)
+
+func TestAdd(t *testing.T) {
+	// use same time for all tests to account for file creation and reading time
+	testTime := time.Now()
+	timeBytes, err := testTime.MarshalJSON()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name                   string
+		preExistingFileContent string
+		newTask                Task
+		expectedID             int64
+		expectedFileContent    string
+		falsy                  bool
+		preventCleanup         bool
+	}{
+		{
+			name:                   "tasksStartWithID1",
+			preExistingFileContent: ``,
+			newTask:                Task{Description: "Test The add function", Status: StatusInProgress},
+			expectedID:             1,
+			expectedFileContent:    `[{"id":1,"description":"Test The add function","status":1,"createdAt":` + string(timeBytes) + `}]`,
+		},
+		{
+			name:                   "tasksAppendAsID2",
+			preExistingFileContent: `[{"id":1,"description":"Test The add function","status":1,"createdAt":` + string(timeBytes) + `}]`,
+			newTask:                Task{Description: "Test The add function appends stuff", Status: StatusTodo},
+			expectedID:             2,
+			expectedFileContent:    `[{"id":1,"description":"Test The add function","status":1,"createdAt":` + string(timeBytes) + `},{"id":2,"description":"Test The add function appends stuff","status":0,"createdAt":` + string(timeBytes) + `}]`,
+		},
+	}
+
+	for _, tst := range tests {
+		t.Run(tst.name, func(t *testing.T) {
+			fileName := "test-" + tst.name + ".json"
+
+			// Cleanup files when done
+			t.Cleanup(func() {
+				if err := deleteFile(fileName); err != nil {
+					log.Default().Print(err)
+				}
+			})
+
+			// Create needed pre-test files
+			if tst.preExistingFileContent != "" {
+				if err := os.WriteFile(fileName, []byte(tst.preExistingFileContent), 0644); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			// Add a task
+			svc := NewTaskService(WithSavePath(fileName), WithTimeFunction(func() time.Time { return testTime }))
+			id, err := svc.Add(tst.newTask)
+			if err != nil {
+				t.Error(err)
+			}
+			if id != tst.expectedID {
+				t.Errorf("%s expected an ID of %d but got %d", tst.name, tst.expectedID, id)
+			}
+
+			// Check if the file state is as expected
+			bytes, err := os.ReadFile(fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(bytes) != tst.expectedFileContent {
+				t.Errorf("%s expected a file content of %s but got %s", tst.name, tst.expectedFileContent, string(bytes))
+			}
+		})
+	}
+}
